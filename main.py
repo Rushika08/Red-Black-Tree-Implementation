@@ -1,16 +1,22 @@
+# Class to represent a node of the tree
 class Node:
     def __init__(self, value, color="RED"):
-        self.value = value
-        self.color = color  # RED or BLACK
-        self.left = None
-        self.right = None
-        self.parent = None
+        self.value = value      # Node value
+        self.color = color      # RED or BLACK
+        self.left = None        # Left child
+        self.right = None       # Right child
+        self.parent = None      # Parent
 
-class RedBlackTree:
+# Class to represent a red-black tree
+class RedBlackTree: 
+
+    # Constructor to initialize the tree
     def __init__(self):
         self.TNULL = Node(value=None, color="BLACK")
         self.root = self.TNULL
 
+
+    # Function to perform left rotation
     def left_rotate(self, x):
         y = x.right
         x.right = y.left
@@ -26,6 +32,8 @@ class RedBlackTree:
         y.left = x
         x.parent = y
 
+
+    # Function to perform right rotation
     def right_rotate(self, y):
         x = y.left
         y.left = x.right
@@ -41,23 +49,25 @@ class RedBlackTree:
         x.right = y
         y.parent = x
 
+
+    # Function to fix the red-black tree after insertion
     def fix_insert(self, k):
-        while k.parent.color == "RED":
-            if k.parent == k.parent.parent.right:
+        while k.parent.color == "RED":                  # If parent is red
+            if k.parent == k.parent.parent.right:       # If parent is right child
                 u = k.parent.parent.left  # uncle
-                if u.color == "RED":
+                if u.color == "RED":                  # If uncle is red
                     u.color = "BLACK"
                     k.parent.color = "BLACK"
                     k.parent.parent.color = "RED"
                     k = k.parent.parent
-                else:
+                else:                                 # If uncle is black         
                     if k == k.parent.left:
                         k = k.parent
                         self.right_rotate(k)
                     k.parent.color = "BLACK"
                     k.parent.parent.color = "RED"
-                    self.left_rotate(k.parent.parent)
-            else:
+                    self.left_rotate(k.parent.parent)   # Rotate parent's parent
+            else:                                       # If parent is left child
                 u = k.parent.parent.right  # uncle
                 if u.color == "RED":
                     u.color = "BLACK"
@@ -73,10 +83,12 @@ class RedBlackTree:
                     self.right_rotate(k.parent.parent)
             if k == self.root:
                 break
-        self.root.color = "BLACK"
+        self.root.color = "BLACK"           # Set root color to black
 
+
+    # Function to fix the red-black tree after deletion
     def fix_delete(self, x):
-        while x != self.root and x.color == "BLACK":
+        while x != self.root and x.color == "BLACK":    # If x is not root and color is black
             if x == x.parent.left:
                 s = x.parent.right
                 if s.color == "RED":
@@ -121,6 +133,8 @@ class RedBlackTree:
                     x = self.root
         x.color = "BLACK"
 
+
+    # Function to insert a new node with a given value
     def insert(self, key):
         node = Node(value=key)
         node.parent = None
@@ -140,6 +154,8 @@ class RedBlackTree:
                 x = x.right
 
         node.parent = y
+
+        # Finding the correct place to insert the node
         if y is None:
             self.root = node
         elif node.value < y.value:
@@ -148,7 +164,7 @@ class RedBlackTree:
             y.right = node
 
         if node.parent is None:
-            node.color = "BLACK"
+            node.color = "BLACK"      # If node is root
             return
 
         if node.parent.parent is None:
@@ -156,18 +172,22 @@ class RedBlackTree:
 
         self.fix_insert(node)
 
+
+    # Function to delete a node with a given value
     def delete(self, key):
+        # Function to replace node with a given node
         def transplant(u, v):
-            if u.parent is None:
+            if u.parent is None:        # If u is root
                 self.root = v
-            elif u == u.parent.left:
+            elif u == u.parent.left:    # If u is left child
                 u.parent.left = v
             else:
-                u.parent.right = v
-            v.parent = u.parent
+                u.parent.right = v      # If u is right child
+            v.parent = u.parent         # Set parent of v to parent of u
 
         z = self.root
-        while z != self.TNULL:
+        # Find node to delete
+        while z != self.TNULL:        
             if z.value == key:
                 break
             elif key < z.value:
@@ -175,35 +195,40 @@ class RedBlackTree:
             else:
                 z = z.right
 
+        # If node not found
         if z == self.TNULL:
             return
 
-        y = z
+        y = z       # Assign Node to delete to y
         y_original_color = y.color
-        if z.left == self.TNULL:
+        if z.left == self.TNULL:        # If left child is TNULL
             x = z.right
-            transplant(z, z.right)
-        elif z.right == self.TNULL:
+            transplant(z, z.right)      # Replace z with right child
+
+        elif z.right == self.TNULL:     # If right child is TNULL
             x = z.left
-            transplant(z, z.left)
+            transplant(z, z.left)       # Replace z with left child
+
         else:
-            y = self.minimum(z.right)[0]
+            y = self.minimum(z.right)[0]    # Find minimum node in right subtree
             y_original_color = y.color
             x = y.right
-            if y.parent == z:
-                x.parent = y
+            if y.parent == z:           # If y is right child of z
+                x.parent = y            # Set parent of x to y
             else:
-                transplant(y, y.right)
-                y.right = z.right
-                y.right.parent = y
-            transplant(z, y)
+                transplant(y, y.right)      # Replace y with right child
+                y.right = z.right           # Set right child of y to right child of z
+                y.right.parent = y          # Set parent of right child of y to y
+            transplant(z, y)                # Replace z with y
             y.left = z.left
             y.left.parent = y
             y.color = z.color
 
-        if y_original_color == "BLACK":
-            self.fix_delete(x)
+        if y_original_color == "BLACK":     # If original color of y is black
+            self.fix_delete(x)              # Fix the tree
 
+
+    # Search for a node with a given value
     def search(self, key):
         node = self.root
         while node != self.TNULL and key != node.value:
@@ -213,41 +238,52 @@ class RedBlackTree:
                 node = node.right
         return node != self.TNULL
 
+
+    # Find the minimum node
     def minimum(self, node):
         while node.left != self.TNULL:
             node = node.left
         return node, node.value
 
+
+    # Find the maximum node
     def maximum(self, node):
         while node.right != self.TNULL:
             node = node.right
         return node, node.value
 
+
+    # Print the tree
     def print_tree(self, node, indent="", last=True):
         if node != self.TNULL:
             print(indent, end="")
-            if last:
+            if last:                        # If last node
                 print("└──", end="")
                 indent += "   "
-            else:
+            else:                           # If not last node
                 print("├──", end="")
                 indent += "│  "
-            color = "R" if node.color == "RED" else "B"
+            color = "R" if node.color == "RED" else "B"         # Set color
             print(f"{color}{node.value}")
-            self.print_tree(node.left, indent, False)
-            self.print_tree(node.right, indent, True)
+            self.print_tree(node.right, indent, False)          # Print right subtree
+            self.print_tree(node.left, indent, True)            # Print left subtree
+
 
 if __name__ == "__main__":
     tree = RedBlackTree()
 
     inputs = list(map(int, input("Enter space-separated values to insert: ").split()))
     for value in inputs:
-        tree.insert(value)
+        tree.insert(value)          # Insert values
     tree.print_tree(tree.root)
 
     while True:
-        operation = input("Enter operation (e.g., Delete 35, Search 40, Max, Min, Quit): ")
-        if operation.startswith("Delete"):
+        operation = input("Enter operation (e.g., Insert 30, Delete 35, Search 40, Max, Min, Quit): ")
+        if operation.startswith("Insert"):
+            key = int(operation.split()[1])
+            tree.insert(key)
+            tree.print_tree(tree.root)
+        elif operation.startswith("Delete"):
             key = int(operation.split()[1])
             tree.delete(key)
             tree.print_tree(tree.root)
